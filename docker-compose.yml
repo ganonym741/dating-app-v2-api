@@ -1,0 +1,63 @@
+version: '3.8'
+
+x-api-common:
+  &api-common
+  environment:
+    &api-common-env
+    TZ: Asia/Jakarta
+    NODE: development
+    PORT: 3010
+    JWT_SECRET_SALT: 0xd9a74074D0a8f4bF5aeA4aB4E1Ab87efbeafBDed
+    JWT_MAX_AGE: 900
+    DECRYPT_SECRET_KEY: 0123456789abcdef0123456789abcdef
+    DECRYPT_IV: abcdef9876543210abcdef9876543210
+    JWTR_SECRET: JKeqoi*&sa
+    REDIS_HOST: cache-redis
+    REDIS_PORT: 6379
+    MONGOOSE_HOST: api-database
+    MONGOOSE_PORT: 5432
+    MONGOOSE_USER: postgres
+    MONGOOSE_PASSWORD: pass123
+    MONGOOSE_DATABASE: postgres
+    RUN_MIGRATIONS: false
+
+services:
+  # api-service:
+  #   container_name: api-service
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   restart: on-failure
+  #   ports:
+  #     - '3011:3011'
+  #   environment:
+  #     <<: *api-common-env
+  #   depends_on:
+  #     api-database:
+  #       condition: service_healthy
+  #     cache-redis:
+  #       condition: service_healthy
+
+  mongo:
+    image: mongo:latest
+    restart: always
+    container_name: mongo
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: Admin123
+    command: ["mongod", "--bind_ip_all"]
+
+  # cache-redis:
+  #   container_name: cache-redis
+  #   image: redis:7.2-bookworm
+  #   ports:
+  #     - '6379:6379'
+  #   restart: on-failure
+  #   healthcheck:
+  #     test: [ "CMD", "redis-cli", "ping" ]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
+
