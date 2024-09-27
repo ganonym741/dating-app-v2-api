@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 import type { ObjectId } from 'typeorm';
 
 import type { GENDER } from '@model/user.entity';
@@ -7,10 +7,12 @@ import type { GENDER } from '@model/user.entity';
 export class LoginDto {
   @ApiProperty({ name: 'username', example: 'xxxxxxxx', required: true })
   @IsString({ message: 'Username tidak boleh kosong.' })
+  @IsNotEmpty()
   username: string;
 
   @ApiProperty({ name: 'password', example: 'xxxxxxxx', required: true })
   @IsString({ message: 'Password tidak boleh kosong.' })
+  @IsNotEmpty()
   password: string;
 }
 

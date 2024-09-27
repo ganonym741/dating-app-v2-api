@@ -1,6 +1,8 @@
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common';
 import { Catch, HttpException, HttpStatus } from '@nestjs/common';
+import { WsException } from '@nestjs/websockets';
 import type { Response } from 'express';
+import type { Socket } from 'socket.io';
 
 @Catch(HttpException)
 export class ExceptionFilters implements ExceptionFilter {
@@ -16,3 +18,16 @@ export class ExceptionFilters implements ExceptionFilter {
     });
   }
 }
+
+@Catch(WsException)
+export class WsExceptionFilter implements ExceptionFilter {
+  catch(exception: WsException, host: ArgumentsHost) {
+    const client = host.switchToWs().getClient<Socket>();
+
+    client.emit('exception', {
+      status_code: 'error',
+      status_description: exception.getError(),
+    });
+  }
+}
+

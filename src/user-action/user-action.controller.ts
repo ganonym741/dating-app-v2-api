@@ -8,6 +8,7 @@ import {
   Response,
   Put,
   Get,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -40,16 +41,11 @@ export class UserActionController {
   })
   @Put('/user-like/:_id')
   async likeUser(@Request() req, @Param('_id') _id: ObjectId, @Response() res) {
-    try {
-      const data = await this.userActionService.likeUser(req.user, _id);
+      const result = await this.userActionService.likeUser(req.user, _id);
 
       return res.status(HttpStatusCode.Created).json({
-        status_code: HttpStatusCode.Created,
-        status_description: data,
+        status_description: result,
       });
-    } catch (err) {
-      throw err;
-    }
   }
 
   @ApiOperation({ summary: 'User view action service' })
@@ -59,16 +55,11 @@ export class UserActionController {
   })
   @Post('/user-view/:_id')
   async viewUser(@Request() req, @Param('_id') _id: ObjectId, @Response() res) {
-    try {
-      const data = await this.userActionService.viewUser(req.user, _id);
+      const result = await this.userActionService.viewUser(req.user, _id);
 
       return res.status(HttpStatusCode.Created).json({
-        status_code: HttpStatusCode.Created,
-        status_description: data,
+        status_description: result,
       });
-    } catch (err) {
-      throw err;
-    }
   }
 
   @ApiOperation({ summary: 'Album like action service' })
@@ -78,16 +69,11 @@ export class UserActionController {
   })
   @Put('/album-like/:_id')
   async likeAlbum(@Request() req, @Param('_id') _id: ObjectId, @Response() res) {
-    try {
-      const data = await this.userActionService.likeAlbum(req.user, _id);
+      const result = await this.userActionService.likeAlbum(req.user, _id);
 
       return res.status(HttpStatusCode.Created).json({
-        status_code: HttpStatusCode.Created,
-        status_description: data,
+        status_description: result,
       });
-    } catch (err) {
-      throw err;
-    }
   }
 
   @ApiOperation({ summary: 'Lihat penyuka user' })
@@ -96,14 +82,10 @@ export class UserActionController {
     isArray: true,
   })
   @Get('my-fans')
-  async viewUserLike(@Request() req, @Response() res) {
-    try {
-      const data = await this.userActionService.viewUserLike(req.user);
+  async viewUserLike(@Request() req, @Query('page') page: number, @Response() res) {
+      const data = await this.userActionService.viewUserLike(req.user, page);
 
-      return res.status(HttpStatusCode.Ok).json(data);
-    } catch (err) {
-      throw err;
-    }
+      return res.status(HttpStatusCode.Ok).json({data});
   }
 
   @ApiOperation({ summary: 'Lihat fans rahasia user' })
@@ -112,14 +94,10 @@ export class UserActionController {
     isArray: true,
   })
   @Get('/my-viewer')
-  async viewUserView(@Request() req, @Response() res) {
-    try {
-      const data = await this.userActionService.viewUserView(req.user);
+  async viewUserView(@Request() req, @Query('page') page: number, @Response() res) {
+      const data = await this.userActionService.viewUserView(req.user, page);
 
-      return res.status(HttpStatusCode.Ok).json(data);
-    } catch (err) {
-      throw err;
-    }
+      return res.status(HttpStatusCode.Ok).json({data});
   }
 
   @ApiOperation({ summary: 'Lihat penyuka album user' })
@@ -131,14 +109,11 @@ export class UserActionController {
   async viewAlbumLike(
     @Request() req,
     @Param('_id') _id: ObjectId,
+    @Query('page') page: number,
     @Response() res
   ) {
-    try {
-      const data = await this.userActionService.viewAlbumLike(req.user, _id);
+      const data = await this.userActionService.viewAlbumLike(req.user, _id, page);
 
-      return res.status(HttpStatusCode.Ok).json(data);
-    } catch (err) {
-      throw err;
-    }
+      return res.status(HttpStatusCode.Ok).json({data});
   }
 }

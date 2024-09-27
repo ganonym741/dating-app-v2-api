@@ -39,6 +39,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       }
 
       const decoded = jwt.decode(accessToken);
+
       const userSession: UserSession = JSON.parse(
         await this.cacheService.getValue(
           `${USER_SESSION_PREFIX}${decoded['_id']}`

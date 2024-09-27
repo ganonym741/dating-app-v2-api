@@ -123,7 +123,7 @@ export class UserActionService {
     return response;
   }
 
-  async viewUserLike(req: UserSession) {
+  async viewUserLike(req: UserSession, page: number) {
     if (req.membership === MEMBERSHIP.Basic)
       throw new ForbiddenException(
         'Upgrade user anda untuk bisa melihat fans anda.'
@@ -133,12 +133,14 @@ export class UserActionService {
       where: {
         user_id: req._id,
       },
+      skip: +page * 20 - 20,
+      take: 20,
     });
 
     return result;
   }
 
-  async viewUserView(req: UserSession) {
+  async viewUserView(req: UserSession, page: number) {
     if (req.membership === MEMBERSHIP.Basic)
       throw new ForbiddenException(
         'Upgrade user anda untuk bisa melihat pengagum anda.'
@@ -148,12 +150,14 @@ export class UserActionService {
       where: {
         user_id: req._id,
       },
+      skip: +page * 20 - 20,
+      take: 20,
     });
 
     return result;
   }
 
-  async viewAlbumLike(req: UserSession, albumId: ObjectId) {
+  async viewAlbumLike(req: UserSession, albumId: ObjectId, page: number) {
     const album = await this.albumRepo.findOne({ where: { _id: albumId } });
 
     if (album.user_id === req._id)
@@ -170,6 +174,8 @@ export class UserActionService {
       where: {
         album_id: albumId,
       },
+      skip: +page * 20 - 20,
+      take: 20,
     });
 
     return result;

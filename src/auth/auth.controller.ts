@@ -32,14 +32,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Login' })
   @MapResponseSwagger(LoginResponseDto, { status: 200, isArray: false })
   @Post('/login')
-  async login(@Request() req, @Body() body: LoginDto, @Response() res) {
-    try {
+  async login(@Body() body: LoginDto, @Response() res) {
       const data = await this.authService.login(body);
 
-      return res.status(HttpStatusCode.Ok).json(data);
-    } catch (err) {
-      throw err;
-    }
+      return res.status(HttpStatusCode.Ok).json({data});
   }
 
   @ApiOperation({ summary: 'Refresh token' })
@@ -48,13 +44,9 @@ export class AuthController {
   @Get('/token/refresh')
   @UseGuards(JwtAuthGuard)
   async refreshToken(@Request() req, @Response() res) {
-    try {
       const data = await this.authService.refreshToken(req.user);
 
-      return res.status(HttpStatusCode.Ok).json(data);
-    } catch (err) {
-      throw err;
-    }
+      return res.status(HttpStatusCode.Ok).json({data});
   }
 
   @ApiOperation({ summary: 'Logout User' })
@@ -66,12 +58,8 @@ export class AuthController {
   @Post('/logout')
   @UseGuards(JwtAuthGuard)
   async logout(@Request() req, @Response() res) {
-    try {
-      const data = await this.authService.logout(req.user);
+      const result = await this.authService.logout(req.user);
 
-      return res.status(HttpStatusCode.Ok).json(data);
-    } catch (err) {
-      throw err;
-    }
+      return res.status(HttpStatusCode.Ok).json({data: result.data, status_description: result.status_description});
   }
 }

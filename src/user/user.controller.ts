@@ -10,6 +10,9 @@ import {
   UseGuards,
   Query,
   Response,
+  UseInterceptors,
+  UploadedFiles,
+  Req,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -19,6 +22,8 @@ import {
 } from '@nestjs/swagger';
 import { HttpStatusCode } from 'axios';
 import { plainToInstance } from 'class-transformer';
+
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -41,7 +46,6 @@ export class UserController {
   })
   @Post('/register')
   async create(@Body() createUserDto: CreateUserDto, @Response() res) {
-    try {
       const payload = plainToInstance(CreateUserDto, createUserDto);
       const data = await this.userService.create(payload);
 
@@ -49,9 +53,25 @@ export class UserController {
         status_code: HttpStatusCode.Created,
         status_description: data,
       });
-    } catch (err) {
-      throw err;
-    }
+  }
+
+  @ApiOperation({ summary: 'Add user photo' })
+  @ApiOkResponse({
+    status: 200,
+    type: SwaggerMetaResponse,
+  })
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'photo', maxCount: 1 },
+    ])
+  )
+  async addPhotoUser(@Req() req, @UploadedFiles() files, @Response() res) {
+    const result = await this.userService.addPhotoUser(req.user, files);
+
+      return res.status(HttpStatusCode.Created).json({
+        status_code: HttpStatusCode.Created,
+        status_description: result,
+      });
   }
 
   @ApiOperation({ summary: 'Find many user' })
@@ -64,13 +84,9 @@ export class UserController {
     @Query() query: GetManyUserDto,
     @Response() res
   ) {
-    try {
       const data = await this.userService.findMany(req.user, query);
 
-      return res.status(HttpStatusCode.Ok).json(data);
-    } catch (err) {
-      throw err;
-    }
+      return res.status(HttpStatusCode.Ok).json({data});
   }
 
   @ApiOperation({ summary: 'Get user profile' })
@@ -79,13 +95,9 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get('/profile')
   async findOne(@Request() req, @Response() res) {
-    try {
       const data = await this.userService.findOne(req.user._id);
 
-      return res.status(HttpStatusCode.Ok).json(data);
-    } catch (err) {
-      throw err;
-    }
+      return res.status(HttpStatusCode.Ok).json({data});
   }
 
   @ApiOperation({ summary: 'Edit user data' })
@@ -101,16 +113,11 @@ export class UserController {
     @Body() updateUserDto: UpdateUserDto,
     @Response() res
   ) {
-    try {
-      const data = await this.userService.update(req.user._id, updateUserDto);
+      const result = await this.userService.update(req.user._id, updateUserDto);
 
       return res.status(HttpStatusCode.Created).json({
-        status_code: HttpStatusCode.Created,
-        status_description: data,
+        status_description: result,
       });
-    } catch (err) {
-      throw err;
-    }
   }
 
   @ApiOperation({ summary: 'Delete account' })
@@ -122,15 +129,10 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Delete()
   async remove(@Request() req, @Response() res) {
-    try {
-      const data = await this.userService.remove(req.user._id);
+      const result = await this.userService.remove(req.user._id);
 
       return res.status(HttpStatusCode.Created).json({
-        status_code: HttpStatusCode.Created,
-        status_description: data,
+        status_description: result,
       });
-    } catch (err) {
-      throw err;
-    }
   }
 }

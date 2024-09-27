@@ -12,6 +12,14 @@
         }
       }
     ],
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "assets": [
+      {
+        "include": "../uploads",
+        "outDir": "dist/uploads",
+        "watchAssets": true
+      }
+    ],
+    "watchAssets": true
   }
 }

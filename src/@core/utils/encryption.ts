@@ -1,49 +1,25 @@
-import * as crypto from 'crypto';
+import * as CryptoJS from 'crypto-js';
 
 import { configService } from '../config/config.service';
 
 export const CryptService = {
   cfg: configService.getSecretConfig(),
-  encrypt: (text: string) => {
-    if (text == null) {
-      return null;
-    }
+  encrypt: (payload: any) => {
+        const key = CryptoJS.enc.Hex.parse(CryptService.cfg.key); // 256-bit key. This must be same on frontend
+        const iv = CryptoJS.enc.Hex.parse(CryptService.cfg.iv); // 16-byte IV for AES. This must be same on frontend
 
-    try {
-      // random initialization vector
-      const iv = crypto.randomBytes(16);
+        // Encrypt the payload
+        const encryptedPayload = CryptoJS.AES.encrypt(
+          JSON.stringify(payload),
+          key,
+          {
+            iv: iv,
+            mode: CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7,
+          },
+        ).toString();
 
-      // random salt
-      const salt = crypto.randomBytes(64);
-
-      // derive key: 32 byte key length - in assumption the masterkey is a cryptographic and NOT a password there is no need for
-      // a large number of iterations. It may can replaced by HKDF
-      const key = crypto.pbkdf2Sync(
-        CryptService.cfg.key,
-        salt,
-        2145,
-        32,
-        'sha512'
-      );
-
-      // AES 256 GCM Mode
-      const cipher = crypto.createCipheriv(CryptService.cfg.algorithm, Buffer.from(key), iv);
-
-      // encrypt the given text
-      const encrypted = Buffer.concat([
-        cipher.update(text, 'utf8'),
-        cipher.final(),
-      ]);
-
-      // extract the auth tag
-      // generate output
-      return Buffer.concat([salt, iv, encrypted]).toString('base64');
-    } catch (e) {
-      console.log('Failed to encrypt', text, e);
-    }
-
-    // error
-    return null;
+        return encryptedPayload;
   },
 
   /**
@@ -52,56 +28,17 @@ export const CryptService = {
    * @param Buffer masterkey
    * @returns String decrypted (original) text
    */
-  decrypt: (encryptedData) => {
-    if (encryptedData == null) {
-      return null;
-    }
+  decrypt: (encryptedData: string) => {
+    const key = CryptoJS.enc.Hex.parse(CryptService.cfg.key); // 256-bit key. This must be same on frontend
+    const iv = CryptoJS.enc.Hex.parse(CryptService.cfg.iv); // 16-byte IV for AES. This must be same on frontend
 
-    const base64Matcher = new RegExp(
-      '^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$'
-    );
+    // Decryption
+    const decrypted = CryptoJS.AES.decrypt(encryptedData, key, {
+      iv: iv,
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7,
+    });
 
-    if (!base64Matcher.test(encryptedData)) {
-      console.log('Invalid hash');
-
-      return null;
-    }
-
-    try {
-      // base64 decoding
-      const data = Buffer.from(encryptedData, 'base64');
-
-      // convert data to buffers
-      const salt = data.subarray(0, 64);
-      const iv = data.subarray(64, 80);
-
-      const encryptedText = data.subarray(80);
-
-      // derive key using; 32 byte key length
-      const key = crypto.pbkdf2Sync(
-        CryptService.cfg.key,
-        salt,
-        2145,
-        32,
-        'sha512'
-      );
-
-      // AES 256 GCM Mode
-      const decipher = crypto.createDecipheriv(
-        CryptService.cfg.algorithm,
-        Buffer.from(key),
-        iv
-      );
-
-      // encrypt the given text
-      const decrypted = Buffer.concat([
-        decipher.update(encryptedText),
-        decipher.final(),
-      ]);
-
-      return decrypted.toString();
-    } catch {
-      return null;
-    }
+    return decrypted.toString(CryptoJS.enc.Utf8);
   },
 };

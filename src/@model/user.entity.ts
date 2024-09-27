@@ -12,7 +12,7 @@ import {
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
-import { IsDateString, IsEmail, IsEnum, IsNotEmpty, Matches } from 'class-validator';
+import { IsDateString, IsEmail, IsEnum, IsEmpty, Matches } from 'class-validator';
 
 import { PASSSWORD_REGEX } from '@core/utils/const';
 import type { ChineseZodiac, ZodiacSign } from '@core/type/horoscope.type';
@@ -40,12 +40,12 @@ export class UserEntity {
 
   @ApiProperty({ example: 'Nama User' })
   @Column()
-  @IsNotEmpty({message: 'Nama harus diisi'})
+  @IsEmpty({message: 'Nama harus diisi'})
   name: string;
 
   @ApiProperty({ example: 'email@example.com' })
   @Column({ unique: true })
-  @IsNotEmpty({message: 'Email harus diisi'})
+  @IsEmpty({message: 'Email harus diisi'})
   @IsEmail({}, { message: 'Email tidak valid' })
   email: string;
 

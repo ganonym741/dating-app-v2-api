@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
-import basicAuth from 'express-basic-auth';
 
+import * as basicAuth from "express-basic-auth";
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { urlencoded } from 'express';
 import helmet from 'helmet';
@@ -11,7 +11,6 @@ import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { AppModule } from '@/app.module';
 import { ExceptionFilters } from '@core/filter/exception.filter';
 import { configService } from './@core/config/config.service';
-import { BasicAuthMiddleware } from '@core/middleware/basic-auth.middleware';
 
 async function bootstrap() {
   const appCfg = configService.getAppConfig();
@@ -23,13 +22,15 @@ async function bootstrap() {
     },
   });
 
+  app.setGlobalPrefix('api');
+
   {
     /**
      * loggerLevel: 'error' | 'warn' | 'log' | 'verbose' | 'debug' | 'silly';
      * https://docs.nestjs.com/techniques/logger#log-levels
      */
 
-    app.useLogger(appCfg.loggerLevel);
+    // app.useLogger(appCfg.loggerLevel);
   }
 
   {
@@ -39,7 +40,7 @@ async function bootstrap() {
      */
     const options: VersioningOptions = {
       type: VersioningType.URI,
-      defaultVersion: 'v1',
+      defaultVersion: '1',
     };
 
     app.enableVersioning(options);
@@ -51,17 +52,21 @@ async function bootstrap() {
      * https://docs.nestjs.com/openapi/introduction
      */
 
-    if (!configService.isProduction()) {
+    if (!configService.isProduction()) {  
       app.use(
-        ['/docs'],
-        BasicAuthMiddleware,
+        "/docs*",
+        basicAuth({
+          challenge: true,
+          users: {
+            admin: "admin123",
+          },
+        })
       );
-      
+
       const config = new DocumentBuilder()
         .setTitle('Dating App - Api')
         .setDescription('Endpoint for dating apps')
         .setVersion('1.0')
-        .addTag('Dating App')
         .addBearerAuth()
         .build();
       const document = SwaggerModule.createDocument(app, config);
@@ -85,13 +90,23 @@ async function bootstrap() {
       })
     );
   }
+
+  {
+    /**
+     * Help validate property payload.
+     */
+
+    app.useGlobalPipes(
+      new ValidationPipe({
+        transform: true,
+      }),
+    );
+  }
   
   // set default local timezone
   setTZ(appCfg.tz);
 
-  app.useGlobalPipes(new ValidationPipe({transform: true}));
   app.use(urlencoded({ limit: '100mb', extended: true }));
-  app.setGlobalPrefix('api');
   app.useGlobalFilters(new ExceptionFilters());
 
   await app.listen(appCfg.port);

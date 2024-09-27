@@ -14,7 +14,7 @@ import { ApiProperty } from '@nestjs/swagger';
 @Entity('album')
 export class AlbumEntity {
   @ApiProperty({ type: String, example: 'xxxxx' })
-    @ObjectIdColumn()
+  @ObjectIdColumn()
   _id: ObjectId
   
   @ApiProperty({ type: String, example: 'xxxxx' })

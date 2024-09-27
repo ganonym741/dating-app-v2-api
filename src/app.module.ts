@@ -1,8 +1,13 @@
-import { Global, Inject, Module } from '@nestjs/common';
+import { join } from 'path';
+
+import type { MiddlewareConsumer} from '@nestjs/common';
+import { Global, Inject, Module, RequestMethod } from '@nestjs/common';
 import { CACHE_MANAGER, CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
@@ -12,11 +17,17 @@ import { AppController } from './app.controller';
 import { UserEntity } from '@model/user.entity';
 import { Seeder } from '@core/seeds/seeds.service';
 import { configService } from '@core/config/config.service';
-import { ChatGateway } from './chat/chat.gateway';
+import { SocketModule } from './socket/socket.module';
+import { ConversationRoomModule } from './conversation-room/conversation-room.module';
+import { ResponseMiddleware } from '@core/middleware/response.middleware';
 
 @Global()
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads'
+    }),
     TypeOrmModule.forRoot(configService.getTypeOrmConfig()),
     TypeOrmModule.forFeature([UserEntity]),
     ConfigModule.forRoot({ isGlobal: true }),
@@ -29,7 +40,9 @@ import { ChatGateway } from './chat/chat.gateway';
     UserModule,
     AlbumModule,
     UserActionModule,
-    ChatGateway
+    SocketModule,
+    ConversationRoomModule,
+    EventEmitterModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [
@@ -55,5 +68,11 @@ export class AppModule {
     } catch (error) {
       console.error(`Error while initializing Redis connection: ${error}`);
     }
+  }
+
+  public configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(ResponseMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }

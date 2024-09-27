@@ -23,7 +23,7 @@ import type {
     
     @ApiProperty({ type: String, example: 'xxxxx' })
     @Column()
-    receiver_id: ObjectId;
+    conversation_id: ObjectId;
   
     @ApiProperty({ example: 'xxxxx' })
     @Column()

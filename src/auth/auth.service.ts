@@ -16,6 +16,7 @@ import { LoginResponseDto } from './dto/auth.dto';
 import { UserEntity } from '@model/user.entity';
 import { RedisCacheService } from '@core/utils/caching';
 import { UserSession, UserTokenRaw } from '@core/type/session.type';
+import { configService } from '@core/config/config.service';
 
 @Injectable()
 export class AuthService {
@@ -44,7 +45,9 @@ export class AuthService {
         'profile_desc',
         'gender',
       ],
-      where: [{ username: username }, { email: username }],
+      where: {
+        $or: [{ username: username }, { email: username }],
+      } as any,
     });
 
     if (!userData) {
@@ -125,8 +128,8 @@ export class AuthService {
 
   async createToken(payload: UserTokenRaw): Promise<string> {
     return await this.jwtService.signAsync(payload, {
-      secret: process.env.JWT_SECRET_SALT,
-      expiresIn: +process.env.JWT_MAX_AGE,
+      secret: configService.getJWTConfig().secret,
+      expiresIn: configService.getJWTConfig().accessTokenTtl,
     });
   }
 

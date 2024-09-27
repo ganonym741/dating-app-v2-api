@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 import {
   BadRequestException,
+  FileTypeValidator,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -15,6 +16,7 @@ import type { GetManyUserDto } from './dto/get-user.dto';
 import { VIEW_SESSION_PREFIX } from '@core/utils/const';
 import { RedisCacheService } from '@core/utils/caching';
 import { UserSession } from '@core/type/session.type';
+import { uploadFile } from '@core/utils/upload';
 
 @Injectable()
 export class UserService {
@@ -34,6 +36,33 @@ export class UserService {
     });
 
     if (result._id) return 'Registrasi user sukses';
+  }
+
+  async addPhotoUser(user: UserSession, files?: any) {
+    if (!(files?.length > 0)) {
+      throw new BadRequestException('Must have at least 1 image');
+    }
+
+    const fileValidator = new FileTypeValidator({
+      fileType: /(jpg|jpeg|png|webp)$/
+    });
+
+    if (!fileValidator.isValid(files.name[0])) {
+      throw new BadRequestException(
+        'File format not supported. Supported file format: (jpg/png/pdf/webp)'
+      );
+    }
+
+    const filePath = await uploadFile(files.name[0], `/user/user-${user._id}`);
+
+    const result = (await this.userRepo.update(user._id, {photo: filePath}))
+      .affected;
+
+    if (result === 0) {
+      throw new NotFoundException('User tidak ditemukan');
+    } else {
+      return 'Data user berhasil di update';
+    }
   }
 
   async findMany(user: UserSession, params: GetManyUserDto) {
@@ -76,7 +105,7 @@ export class UserService {
   }
 
   async update(_id: ObjectId, updateUserDto: UpdateUserDto) {
-    const result = (await this.userRepo.update({ _id: _id }, updateUserDto))
+    const result = (await this.userRepo.update(_id, updateUserDto))
       .affected;
 
     if (result === 0) {
