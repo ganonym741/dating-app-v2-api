@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MulterModule } from '@nestjs/platform-express';
-import multer from 'multer';
+import * as multer from 'multer';
 
 import { AlbumService } from './album.service';
 import { AlbumController } from './album.controller';

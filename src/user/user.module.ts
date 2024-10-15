@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MulterModule } from '@nestjs/platform-express';
-import multer from 'multer';
+import * as multer from 'multer';
 
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
